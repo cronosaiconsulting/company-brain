@@ -3,13 +3,36 @@
 ## Document Overview
 
 **Purpose**: Theoretical framework for model-agnostic Executive Brain with sophisticated effort regulation
-**Version**: 2.1 (supersedes v2.0 - removes cost/time analysis, adds model abstraction)
-**Date**: 2025-11-08
+**Version**: 2.1.1 (evidence-backed revision - adds assumption markers and disclaimers)
+**Date**: 2025-11-09
 **Key Principles**:
 - **Model Agnostic**: Easy switching between LLMs (Kimi K2, DeepSeek, Qwen, Llama, Claude, GPT, etc.)
 - **Deployment Flexible**: On-premise or bare metal cloud (Vultr, Hetzner, OVH)
 - **Theoretical Framework**: Architecture patterns, not implementation specifics
 - **Future-Proof**: Design for models that don't exist yet
+
+---
+
+## ⚠️ Evidence & Assumption Transparency
+
+**This document uses the following markers to indicate evidence status:**
+
+- **✅ VERIFIED**: Claim backed by official documentation, research papers, or verified testing
+- **⚠️ ASSUMPTION**: Reasonable inference requiring verification before deployment
+- **⛔ UNVERIFIED**: Placeholder pending access to official specifications
+
+**Important Notes**:
+1. **Numeric Parameters**: Most threshold values, formulas, and coefficients are SUGGESTED STARTING POINTS based on general ML/LLM practices. They are NOT empirically optimized for this specific system.
+2. **Model Capabilities**: Some provider implementations reference API parameters that are INFERRED from model architecture but NOT verified from official API documentation.
+3. **Performance Estimates**: Capacity estimates (user counts, request volumes) are ROUGH GUIDELINES requiring load testing.
+
+**Before Production Deployment**:
+- Review all ⚠️ ASSUMPTION markers and verify against actual deployed systems
+- Calibrate numeric parameters via A/B testing and empirical measurement
+- Update provider implementations with actual API schemas
+- Run load tests to validate capacity estimates
+
+See `evidence_traceability_audit.md` for complete analysis of claims and assumptions.
 
 ---
 
@@ -155,6 +178,31 @@ class LLMProvider(ABC):
 
 ```python
 class KimiK2Provider(LLMProvider):
+    """
+    ⚠️ IMPORTANT - API PARAMETER ASSUMPTIONS:
+
+    This provider implementation assumes Kimi K2 exposes the following parameters
+    via its API when deployed with vLLM or similar serving infrastructure:
+
+    ASSUMED PARAMETERS (NOT VERIFIED from official Moonshot AI API docs):
+    - max_steps: Maximum reasoning steps the model can take
+    - thinking_budget_per_step: Token budget allocated per reasoning step
+
+    VERIFIED PARAMETERS:
+    - model: "kimi-k2-thinking" ✅ (confirmed from Hugging Face)
+    - messages: OpenAI-compatible chat format ✅ (standard)
+    - temperature, max_tokens: Standard parameters ✅
+
+    TODO BEFORE DEPLOYMENT:
+    1. Deploy Kimi K2 with vLLM and inspect actual API schema
+    2. Update parameter names if they differ from assumptions
+    3. Test thinking budget controls actually work
+    4. Document actual parameter ranges and defaults
+
+    The parameter names used here are based on logical inference from model
+    capabilities, NOT official documentation. Treat as PLACEHOLDER until verified.
+    """
+
     def __init__(self, endpoint: str, deployment: str = "self-hosted"):
         self.endpoint = endpoint  # e.g., "http://localhost:8000" for self-hosted
         self.deployment = deployment
@@ -189,20 +237,35 @@ class KimiK2Provider(LLMProvider):
 
     def get_capabilities(self) -> Dict[str, Any]:
         return {
-            "supports_thinking": True,
-            "supports_tools": True,  # Native tool calling
-            "context_window": 256000,
-            "thinking_budget_range": (1000, 256000),
-            "strengths": ["reasoning", "tool_orchestration", "agentic_workflows", "long_context"],
-            "weaknesses": []  # TBD based on real-world usage
+            "supports_thinking": True,  # ✅ VERIFIED: Moonshot AI blog, model design
+            "supports_tools": True,     # ⚠️ ASSUMPTION: Inferred from model architecture, needs verification
+            "context_window": 256000,   # ✅ VERIFIED: Official Moonshot AI specification
+            "thinking_budget_range": (1000, 256000),  # ⚠️ EXTRAPOLATED: Based on context window, not official API spec
+            "strengths": [
+                "reasoning",           # ✅ VERIFIED: Benchmark results on AIME, MATH, Codeforces
+                "long_context"         # ✅ VERIFIED: 256K context window confirmed
+                # ⚠️ REMOVED "tool_orchestration", "agentic_workflows" - hypothesized but not tested
+            ],
+            "weaknesses": []  # ⚠️ TBD: Requires real-world testing and benchmarking
         }
 
     def get_thinking_budget(self) -> Tuple[int, int, int]:
+        # ⚠️ ASSUMPTION: These values are ESTIMATES based on context window size
+        # Rationale:
+        #   - min (1000): Minimal thinking for simple queries
+        #   - max (256000): Full context window (probably too high, tune in production)
+        #   - default (96000): ~1/3 of context window for balanced thinking
+        # TODO: Test actual thinking budget behavior and calibrate these values
         return (1000, 256000, 96000)  # min, max, default
 
     def estimate_tokens(self, text: str) -> int:
-        # Use tiktoken or model-specific tokenizer
-        return len(text.split()) * 1.3  # Rough estimate
+        # ⚠️ PLACEHOLDER: This is a ROUGH heuristic, not based on actual Kimi K2 tokenizer
+        # Formula: word count * 1.3 (assumes ~1.3 tokens per word on average)
+        # TODO: Replace with actual tokenizer:
+        #   - Use Moonshot AI official tokenizer if available
+        #   - Or use tiktoken with appropriate encoding
+        #   - Current estimate may be off by 20-50%
+        return len(text.split()) * 1.3  # ⚠️ Rough estimate only
 
     def get_model_metadata(self) -> Dict[str, Any]:
         return {
@@ -218,18 +281,40 @@ class KimiK2Provider(LLMProvider):
 
 ```python
 class DeepSeekR1Provider(LLMProvider):
+    """
+    ⚠️ IMPORTANT - PLACEHOLDER IMPLEMENTATION:
+
+    DeepSeek R1 specifications are based on ASSUMPTIONS about the model's
+    capabilities. Verify the following before deployment:
+
+    UNVERIFIED ASSUMPTIONS:
+    - Model exists and is publicly available ⚠️
+    - API supports enable_reasoning parameter ⚠️
+    - API supports reasoning_budget parameter ⚠️
+    - Context window is 128K tokens ⚠️
+    - Tool calling is NOT natively supported ⚠️
+
+    TODO BEFORE DEPLOYMENT:
+    1. Verify DeepSeek R1 model availability and access
+    2. Review official API documentation for actual parameters
+    3. Test reasoning capabilities and budget controls
+    4. Update implementation based on actual API schema
+
+    This is a HYPOTHETICAL provider implementation based on similar models.
+    """
+
     def __init__(self, endpoint: str):
         self.endpoint = endpoint
         self.client = self._init_client()
 
     def generate(self, prompt: str, params: Dict[str, Any]) -> str:
-        # DeepSeek R1 has similar thinking capabilities
+        # ⚠️ ASSUMPTION: DeepSeek R1 has similar API to other reasoning models
         response = self.client.completions.create(
             model="deepseek-r1",
             prompt=prompt,
             max_tokens=params.get("max_tokens", 8192),
             temperature=params.get("temperature", 0.7),
-            # DeepSeek-specific params
+            # ⚠️ ASSUMPTION: These parameters may not exist in actual API
             enable_reasoning=params.get("enable_reasoning", True),
             reasoning_budget=params.get("thinking_budget_per_step", 10000)
         )
@@ -237,12 +322,12 @@ class DeepSeekR1Provider(LLMProvider):
 
     def get_capabilities(self) -> Dict[str, Any]:
         return {
-            "supports_thinking": True,
-            "supports_tools": False,  # May need custom tool wrapper
-            "context_window": 128000,
-            "thinking_budget_range": (1000, 128000),
-            "strengths": ["mathematical_reasoning", "coding", "chinese_language"],
-            "weaknesses": ["tool_orchestration"]  # Not native
+            "supports_thinking": True,  # ⚠️ ASSUMPTION: Based on model name "R1" (reasoning)
+            "supports_tools": False,    # ⚠️ ASSUMPTION: Not documented in available info
+            "context_window": 128000,   # ⚠️ ASSUMPTION: Common size, needs verification
+            "thinking_budget_range": (1000, 128000),  # ⚠️ ASSUMPTION: Extrapolated
+            "strengths": ["mathematical_reasoning", "coding"],  # ⚠️ Based on DeepSeek lineage
+            "weaknesses": ["tool_orchestration"]  # ⚠️ Inferred from lack of tool support
         }
 
     # ... other methods
@@ -419,17 +504,25 @@ class ModelRouter:
 
 **Task Type → Model Mapping** (example preferences):
 
+⚠️ **IMPORTANT**: This table contains SUGGESTED routing preferences based on model architectures and general knowledge. These have NOT been validated with actual benchmarks. Validate and tune for your specific use case.
+
 | Task Type | Primary | Secondary | Rationale |
 |-----------|---------|-----------|-----------|
-| **Deep Reasoning** (math, logic, proofs) | Kimi K2, DeepSeek R1 | Qwen 2.5 Math | Variable thinking budgets, proven reasoning capabilities |
-| **Tool Orchestration** (100+ step workflows) | Kimi K2 | Claude Opus | Native tool calling, handles 200-300 steps |
-| **Code Generation** | DeepSeek Coder, Qwen Coder | Kimi K2 | Specialized for code, better at language-specific idioms |
-| **Multilingual** (non-English) | Qwen 2.5, DeepSeek | Kimi K2 | Trained on more diverse languages |
-| **Long Context** (>128K tokens) | Kimi K2 (256K) | Claude Opus (200K) | Larger context windows |
-| **Fast Simple Queries** | Llama 3 8B, Qwen 2.5 7B | Any fast model | Smaller models for speed |
-| **General Purpose** | Kimi K2 | DeepSeek R1 | Balanced capabilities |
+| **Deep Reasoning** (math, logic, proofs) | Kimi K2, DeepSeek R1 | Qwen 2.5 Math | ✅ Variable thinking budgets (verified capability), proven reasoning on benchmarks |
+| **Tool Orchestration** (multi-step workflows) | Kimi K2 | Claude Opus | ⚠️ Native tool calling (assumed for Kimi K2), long context for complex workflows |
+| **Code Generation** | DeepSeek Coder, Qwen Coder | Kimi K2 | ✅ Specialized code models, better at language-specific idioms (general knowledge) |
+| **Multilingual** (non-English) | Qwen 2.5, DeepSeek | Kimi K2 | ✅ Trained on diverse languages (Qwen technical report, Chinese models) |
+| **Long Context** (>128K tokens) | Kimi K2 (256K) | Claude Opus (200K) | ✅ Context window sizes verified from official specs |
+| **Fast Simple Queries** | Llama 3 8B, Qwen 2.5 7B | Any fast model | ✅ Smaller models = lower latency (well-established) |
+| **General Purpose** | Kimi K2 | DeepSeek R1 | ⚠️ Hypothesized based on balanced capabilities, needs testing |
 
 **Flexibility**: This mapping is **configurable**, not hard-coded. Users can override per deployment.
+
+**Validation TODO**:
+- [ ] Benchmark each task type across available models
+- [ ] Measure latency, quality, and cost for each routing decision
+- [ ] A/B test routing policies to find optimal mappings
+- [ ] Update table with empirical evidence
 
 ---
 
@@ -524,17 +617,27 @@ class EffortRegulationOrchestrator:
                     params["enable_reasoning"] = True
                 elif metadata["provider"] == "anthropic":
                     # Claude
-                    params["thinking"] = effort_score > 0.5
-                    params["extended_thinking"] = effort_score > 0.8
+                    # ⚠️ NOTE: As of 2025-11-09, Claude API does not have explicit
+                    # "extended_thinking" parameter. This is a hypothetical future API.
+                    # Current Claude API uses standard max_tokens and temperature.
+                    # TODO: Update when/if Claude adds thinking budget controls
+                    params["thinking"] = effort_score > 0.5  # ⚠️ Hypothetical
+                    params["extended_thinking"] = effort_score > 0.8  # ⚠️ Hypothetical
 
         # Temperature (higher effort = higher creativity for complex tasks)
+        # ⚠️ DESIGN CHOICE: Linear temperature mapping
+        # Rationale: Higher effort tasks benefit from exploration (higher temp)
+        # Range [0.3-0.9] avoids extremes (too deterministic vs too random)
+        # TODO: A/B test alternatives (exponential, sigmoid, step function)
         params["temperature"] = 0.3 + (effort_score * 0.6)  # Range: 0.3 - 0.9
 
         # Max tokens
+        # ⚠️ HEURISTIC THRESHOLDS: Based on typical response lengths, not empirical
+        # TODO: Analyze actual response length distributions and optimize cutoffs
         if effort_score < 0.3:
             params["max_tokens"] = 2048  # Short responses
         elif effort_score < 0.6:
-            params["max_tokens"] = 4096
+            params["max_tokens"] = 4096  # Medium responses
         else:
             params["max_tokens"] = 8192  # Detailed responses
 
@@ -543,17 +646,31 @@ class EffortRegulationOrchestrator:
     def _effort_to_steps(self, effort_score: float) -> int:
         """
         Map effort score to max reasoning steps.
+
+        ⚠️ ASSUMPTION: Step counts are ESTIMATES based on intuition about reasoning complexity.
+        Rationale:
+          - Low effort (5-10 steps): Quick factual queries
+          - Medium (50 steps): Multi-step reasoning
+          - High (120-300 steps): Complex proofs, deep analysis
+
+        TODO: Calibrate with actual model testing:
+          1. Run tasks at different step budgets
+          2. Measure quality vs steps relationship
+          3. Find diminishing returns point
+          4. Update thresholds based on empirical data
+
+        Current values are PLACEHOLDERS pending real-world validation.
         """
         if effort_score < 0.2:
-            return 5
+            return 5      # ⚠️ Minimal effort
         elif effort_score < 0.4:
-            return 10
+            return 10     # ⚠️ Fast
         elif effort_score < 0.6:
-            return 50
+            return 50     # ⚠️ Balanced
         elif effort_score < 0.8:
-            return 120
+            return 120    # ⚠️ Thorough
         else:
-            return 300
+            return 300    # ⚠️ Maximum
 ```
 
 ---
@@ -1322,14 +1439,27 @@ Does task require deep reasoning?
 
 ### 8.2 Deployment Decision Matrix
 
+⚠️ **IMPORTANT**: These thresholds are ROUGH GUIDELINES based on typical enterprise deployments, NOT load-tested for this specific architecture. Actual capacity depends on:
+- Hardware specs (CPU, GPU, RAM, network)
+- Task complexity distribution
+- Model inference latency
+- Concurrent user behavior
+
+**TODO**: Run load testing to determine actual limits for your deployment.
+
 | Factor | Single Server | K8s Cluster | Hybrid |
 |--------|---------------|-------------|--------|
 | **Team Size** | <5 | >5 | Any |
-| **User Count** | <50 | >100 | 50-100 |
-| **Request Volume** | <1K/day | >10K/day | 1K-10K |
+| **User Count** | <50 ⚠️ | >100 ⚠️ | 50-100 ⚠️ |
+| **Request Volume** | <1K/day ⚠️ | >10K/day ⚠️ | 1K-10K ⚠️ |
 | **Availability SLA** | 90% OK | 99.9% required | 99% |
 | **Operational Expertise** | Limited | Strong | Medium |
 | **Budget** | Minimal | Higher | Flexible |
+
+**Capacity Notes**:
+- User count thresholds assume moderate usage (10-50 queries/user/day)
+- Request volume depends heavily on avg response time (1s vs 30s makes 30x difference)
+- GPU memory limits are hard constraints - test with actual model and workload
 
 ### 8.3 Model Serving Decision Matrix
 

@@ -3,9 +3,33 @@
 ## Document Overview
 
 **Purpose**: Theoretical framework for sophisticated effort regulation in LLM-based systems
-**Version**: 2.1 (model-agnostic, no cost/time analysis)
-**Date**: 2025-11-08
+**Version**: 2.1.1 (evidence-backed revision - adds assumption markers)
+**Date**: 2025-11-09
 **Key Principle**: Dynamically allocate computational effort based on task complexity and context
+
+---
+
+## ⚠️ Evidence & Assumption Transparency
+
+**This document uses the following markers:**
+
+- **✅ VERIFIED**: Claim backed by research, testing, or established practice
+- **⚠️ ASSUMPTION**: Design choice requiring calibration via empirical testing
+- **📊 HEURISTIC**: Pattern-based approach, not mathematically optimized
+
+**Critical Disclaimer**:
+All numeric parameters in this document (dimension weights, thresholds, multipliers, quality gates) are **SUGGESTED STARTING VALUES** based on:
+1. General ML/LLM system design principles
+2. Intuition about task complexity factors
+3. Common practices in adaptive compute allocation
+
+These values have **NOT been empirically validated** for this specific system. Before production:
+- Calibrate dimension weights via regression on labeled task data
+- Tune quality thresholds via ROC curve analysis
+- A/B test formula alternatives (linear vs exponential vs sigmoid)
+- Validate with real user tasks and measure outcomes
+
+See `evidence_traceability_audit.md` §2 for detailed analysis.
 
 ---
 
@@ -45,17 +69,36 @@ Minimal            Balanced             Maximum
 def compute_intrinsic_complexity(task: str) -> float:
     """
     Return complexity score 0.0 (trivial) to 1.0 (extremely complex).
+
+    ⚠️ DIMENSION WEIGHTS - SUGGESTED STARTING VALUES:
+
+    These weights are based on INTUITION about which factors most impact
+    computational requirements, NOT empirical optimization.
+
+    Rationale for suggested weights:
+    - reasoning_depth (0.25): Highest - deep reasoning directly predicts compute needs
+    - tool_orchestration (0.20): Second - tool calls are expensive
+    - knowledge_breadth, ambiguity, constraints (0.15 each): Moderate impact
+    - novelty (0.10): Lowest - can be mitigated via retrieval
+
+    CALIBRATION TODO:
+    1. Collect 100-200 tasks with known optimal effort levels
+    2. Run regression: minimize(predicted - actual effort)
+    3. Cross-validate to find optimal weights
+    4. Update quarterly as task distribution evolves
+
+    Status: UNCALIBRATED - use with caution
     """
     dimensions = {
-        "reasoning_depth": analyze_reasoning_depth(task),      # Weight: 0.25
-        "knowledge_breadth": analyze_knowledge_breadth(task),  # Weight: 0.15
-        "tool_orchestration": analyze_tool_complexity(task),   # Weight: 0.20
-        "ambiguity": analyze_ambiguity(task),                  # Weight: 0.15
-        "constraints": analyze_constraints(task),              # Weight: 0.15
-        "novelty": analyze_novelty(task)                       # Weight: 0.10
+        "reasoning_depth": analyze_reasoning_depth(task),      # Weight: 0.25 ⚠️
+        "knowledge_breadth": analyze_knowledge_breadth(task),  # Weight: 0.15 ⚠️
+        "tool_orchestration": analyze_tool_complexity(task),   # Weight: 0.20 ⚠️
+        "ambiguity": analyze_ambiguity(task),                  # Weight: 0.15 ⚠️
+        "constraints": analyze_constraints(task),              # Weight: 0.15 ⚠️
+        "novelty": analyze_novelty(task)                       # Weight: 0.10 ⚠️
     }
 
-    weights = [0.25, 0.15, 0.20, 0.15, 0.15, 0.10]
+    weights = [0.25, 0.15, 0.20, 0.15, 0.15, 0.10]  # ⚠️ SUGGESTED VALUES
     complexity = sum(
         dimensions[dim] * weight
         for dim, weight in zip(dimensions, weights)
@@ -365,23 +408,46 @@ def compute_final_effort(
 ) -> float:
     """
     Combine intrinsic complexity with context to get final effort allocation.
+
+    ⚠️ MULTIPLIER FORMULAS - HEURISTIC VALUES:
+
+    These coefficients are DESIGN CHOICES, not empirically derived.
+
+    Rationale:
+    - urgency: Max 30% reduction (preserve minimum quality under time pressure)
+    - risk: Max 50% increase (high stakes justify extra compute)
+    - preference: Range [0.7-1.3] (allow user override ±30%)
+    - Multiplicative composition: Allows compounding effects
+
+    KNOWN ISSUE: Multiplying 4 factors can cause extreme values.
+    Example: urgent (0.7) × high-risk (1.5) × low-budget (0.5) = 0.525
+             But low budget shouldn't reduce high-risk task effort!
+
+    TODO:
+    - Add safeguards (minimum effort floor for high-risk tasks)
+    - Test additive vs multiplicative composition
+    - Calibrate coefficients via outcome analysis
     """
     # Base effort from task complexity
     base_effort = intrinsic_complexity
 
     # Contextual modulation
-    urgency_multiplier = 1.0 - (context["urgency"] * 0.3)  # Max 30% reduction
-    risk_multiplier = 1.0 + (context["risk"] * 0.5)  # Max 50% increase
+    urgency_multiplier = 1.0 - (context["urgency"] * 0.3)  # ⚠️ Max 30% reduction
+    risk_multiplier = 1.0 + (context["risk"] * 0.5)  # ⚠️ Max 50% increase
     budget_multiplier = context["budget_remaining"]  # Direct scaling
-    preference_multiplier = 0.7 + (context["user_preference"] * 0.6)  # Range: 0.7-1.3
+    preference_multiplier = 0.7 + (context["user_preference"] * 0.6)  # ⚠️ Range: 0.7-1.3
 
-    # Composite multiplier
+    # Composite multiplier (⚠️ multiplicative - may need additive alternative)
     total_multiplier = (
         urgency_multiplier *
         risk_multiplier *
         budget_multiplier *
         preference_multiplier
     )
+
+    # ⚠️ SAFEGUARD: High-risk tasks always get minimum 60% effort
+    if context["risk"] > 0.8:
+        total_multiplier = max(total_multiplier, 0.6)
 
     # Final effort (clamped to [0.0, 1.0])
     final_effort = min(base_effort * total_multiplier, 1.0)
@@ -467,17 +533,23 @@ def map_effort_to_params(
 
     # Temperature (universal parameter)
     # Higher effort = higher exploration (for complex tasks)
+    # ⚠️ HEURISTIC: Linear mapping [0.3-0.9]
+    # Rationale: Avoid extremes (too deterministic vs too random)
+    # TODO: Test alternatives (exponential, sigmoid, step function)
     params["temperature"] = 0.3 + (effort_score * 0.6)  # Range: 0.3-0.9
 
     # Max tokens (universal parameter)
+    # ⚠️ HEURISTIC: Thresholds based on typical response lengths
+    # TODO: Analyze actual distributions and optimize cutoffs
     if effort_score < 0.3:
-        params["max_tokens"] = 2048
+        params["max_tokens"] = 2048  # ⚠️ Short responses
     elif effort_score < 0.6:
-        params["max_tokens"] = 4096
+        params["max_tokens"] = 4096  # ⚠️ Medium responses
     else:
-        params["max_tokens"] = 8192
+        params["max_tokens"] = 8192  # ⚠️ Detailed responses
 
     # Top-p (nucleus sampling)
+    # ⚠️ HEURISTIC: Range [0.9-0.99] for quality control
     params["top_p"] = 0.9 + (effort_score * 0.09)  # Range: 0.9-0.99
 
     return params
@@ -557,25 +629,47 @@ def execute_with_adaptive_effort(task, initial_effort_config):
 **Configurable per deployment**:
 
 ```python
+# ⚠️ QUALITY THRESHOLDS - PLACEHOLDER VALUES:
+#
+# These thresholds are based on Ragas documentation examples, NOT tuned for this system.
+#
+# CRITICAL: Wrong thresholds = either:
+#   - Too strict: Waste compute on unnecessary retries
+#   - Too lenient: Accept poor-quality outputs
+#
+# CALIBRATION PROCEDURE:
+# 1. Run 200 test tasks, collect Ragas scores + human quality judgments
+# 2. Plot ROC curves (true positive rate vs false positive rate)
+# 3. Find thresholds that maximize user satisfaction while minimizing retries
+# 4. Use separate thresholds per task type (reasoning may need higher faithfulness)
+# 5. Re-calibrate quarterly as model performance evolves
+#
+# Current status: UNCALIBRATED - use with extreme caution
+
 QUALITY_THRESHOLDS = {
     "faithfulness": {
-        "reject": 0.5,   # Below this = hallucination, reject immediately
-        "retry": 0.8,    # Below this = retry with more effort
-        "accept": 0.8    # Above this = good enough
+        "reject": 0.5,   # ⚠️ Below this = hallucination, reject immediately
+        "retry": 0.8,    # ⚠️ Below this = retry with more effort
+        "accept": 0.8    # ⚠️ Above this = good enough
     },
     "answer_relevance": {
-        "reject": 0.4,
-        "retry": 0.7,
-        "accept": 0.7
+        "reject": 0.4,   # ⚠️ PLACEHOLDER
+        "retry": 0.7,    # ⚠️ PLACEHOLDER
+        "accept": 0.7    # ⚠️ PLACEHOLDER
     },
     "context_precision": {
-        "retry": 0.6,
-        "accept": 0.6
+        "retry": 0.6,    # ⚠️ PLACEHOLDER
+        "accept": 0.6    # ⚠️ PLACEHOLDER
     }
 }
 
 def evaluate_quality(result, task):
-    """Use Ragas to evaluate response quality."""
+    """
+    Use Ragas to evaluate response quality.
+
+    ⚠️ NOTE: Ragas metrics are general-purpose and may not capture
+    domain-specific quality requirements. Consider adding custom metrics.
+    """
     from ragas.metrics import faithfulness, answer_relevance, context_precision
 
     evaluation = {
@@ -761,6 +855,21 @@ class ROMAWithEffortRegulation:
         """
         Allocate portion of parent's effort budget to subtask.
 
+        ⚠️ ALLOCATION FORMULA - HEURISTIC VALUES:
+
+        Coefficients are DESIGN CHOICES, not empirically optimized.
+
+        Rationale:
+        - Reserve 15% of parent budget for aggregation step
+        - Priority multiplier [0.5-1.5]: Critical tasks get 3x non-critical
+        - Complexity multiplier [0.7-1.3]: Complex subtasks get more effort
+
+        KNOWN ISSUE: Formula can exceed parent budget (requires clamping).
+        Example: base=0.65, priority=1.5, complexity=1.18 → 1.15 (clamped to 1.0)
+
+        BETTER APPROACH: Normalize across ALL subtasks to ensure total ≤ parent.
+        TODO: Implement proportional allocation based on subtask scores.
+
         Args:
             parent_effort_budget: Total effort parent has (0.0-1.0)
             subtask_complexity: Intrinsic complexity of subtask (0.0-1.0)
@@ -770,13 +879,13 @@ class ROMAWithEffortRegulation:
             Effort allocation for subtask (0.0-1.0)
         """
         # Base: inherit from parent (but reserve some for aggregation)
-        base_allocation = parent_effort_budget * 0.85  # 15% reserved
+        base_allocation = parent_effort_budget * 0.85  # ⚠️ 15% reserved (arbitrary)
 
         # Adjust by priority
-        priority_multiplier = 0.5 + (priority * 1.0)  # Range: 0.5-1.5
+        priority_multiplier = 0.5 + (priority * 1.0)  # ⚠️ Range: 0.5-1.5 (heuristic)
 
         # Adjust by complexity
-        complexity_multiplier = 0.7 + (subtask_complexity * 0.6)  # Range: 0.7-1.3
+        complexity_multiplier = 0.7 + (subtask_complexity * 0.6)  # ⚠️ Range: 0.7-1.3 (heuristic)
 
         # Final allocation
         subtask_effort = base_allocation * priority_multiplier * complexity_multiplier
