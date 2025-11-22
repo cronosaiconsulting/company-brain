@@ -1,0 +1,725 @@
+{
+  "document_metadata": {
+    "title": "Executive Brain: Constraints and Trade-offs",
+    "version": "1.0",
+    "date": "2025-11-08",
+    "description": "Comprehensive documentation of architectural constraints, technical limitations, trade-offs, and mitigation strategies"
+  },
+  "technical_constraints": {
+    "orchestration_frameworks": [
+      {
+        "framework": "ROMA",
+        "constraint": "Beta maturity (v0.2.0-beta)",
+        "impact": "High",
+        "risk": "API instability, breaking changes, limited community support",
+        "mitigation": [
+          "Use Claude SDK as primary orchestrator",
+          "Deploy ROMA only for complex reasoning tasks",
+          "Pin to specific version, test upgrades in staging",
+          "Contribute to open source to influence roadmap",
+          "Build abstraction layer for easier framework swapping"
+        ],
+        "trade_off": "Accept beta risk for SOTA performance (81.7% FRAMES) and recursive capabilities"
+      },
+      {
+        "framework": "Claude_Agent_SDK",
+        "constraint": "Anthropic-specific (vendor lock-in)",
+        "impact": "Medium",
+        "risk": "API changes, pricing changes, service availability dependent on Anthropic",
+        "mitigation": [
+          "Design agent interface abstraction (can swap LLM provider)",
+          "Monitor Anthropic status page and announcements",
+          "Budget buffer for potential price increases",
+          "Fallback to alternative SDK if needed"
+        ],
+        "trade_off": "Vendor lock-in for native integration, autonomy features, and latest Claude capabilities"
+      },
+      {
+        "framework": "LangGraph",
+        "constraint": "Steeper learning curve vs alternatives",
+        "impact": "Low",
+        "risk": "Longer developer onboarding, more complex debugging",
+        "mitigation": [
+          "Invest in team training",
+          "Build library of reusable workflow templates",
+          "Use visualization tools (Mermaid) for clarity",
+          "Comprehensive documentation and examples"
+        ],
+        "trade_off": "Complexity for precision, control, and explainability"
+      }
+    ],
+    "memory_systems": [
+      {
+        "system": "Neo4j_AuraDB",
+        "constraint": "Cost scales with data volume and query load",
+        "impact": "High",
+        "risk": "Monthly costs can exceed budget if data/queries grow unexpectedly",
+        "mitigation": [
+          "Start with smaller tier, monitor usage",
+          "Implement query optimization (indexes, query planning)",
+          "Archive old data (move to cheaper storage after N months)",
+          "Cache frequent queries in Redis",
+          "Set up cost alerts and budget caps"
+        ],
+        "trade_off": "Managed convenience and high performance for potential higher cost than self-hosted"
+      },
+      {
+        "system": "Neo4j_Cypher",
+        "constraint": "Specialized query language (team learning curve)",
+        "impact": "Medium",
+        "risk": "Team unfamiliar with graph databases may struggle with Cypher",
+        "mitigation": [
+          "Provide Cypher training (online courses, workshops)",
+          "Build query library with common patterns",
+          "Use Neo4j Browser for visual query building",
+          "Hire or consult Neo4j expert for schema design"
+        ],
+        "trade_off": "Learning curve for powerful relationship-based querying and reasoning"
+      },
+      {
+        "system": "Graphiti",
+        "constraint": "Newer framework (2024), smaller ecosystem",
+        "impact": "Medium",
+        "risk": "Limited documentation, community support, potential bugs",
+        "mitigation": [
+          "Engage with Zep AI team (framework authors)",
+          "Contribute bug fixes and documentation",
+          "Build fallback: if Graphiti fails, use standard Neo4j temporal patterns",
+          "Monitor GitHub for updates and issues"
+        ],
+        "trade_off": "Accept newer framework risk for real-time temporal memory capabilities"
+      }
+    ],
+    "policy_governance": [
+      {
+        "system": "OPA",
+        "constraint": "Rego language complexity",
+        "impact": "Medium",
+        "risk": "Complex policies hard to write, debug, and audit",
+        "mitigation": [
+          "Keep infrastructure policies simple (RBAC, rate limits)",
+          "Use OPA Playground for testing",
+          "Peer review all policy changes",
+          "Use OPA Gatekeeper for Kubernetes-specific policies (simpler syntax)"
+        ],
+        "trade_off": "Complexity for powerful, flexible policy engine with large community"
+      },
+      {
+        "system": "Cedar",
+        "constraint": "Smaller community vs OPA",
+        "impact": "Low",
+        "risk": "Fewer examples, libraries, integrations",
+        "mitigation": [
+          "Leverage AWS documentation and examples",
+          "Engage with Cedar community (GitHub discussions)",
+          "Focus on readability advantage for business users",
+          "Consider Cedar as optional (OPA can handle all if needed)"
+        ],
+        "trade_off": "Smaller community for safety-oriented design and readability"
+      }
+    ],
+    "tool_integration": [
+      {
+        "protocol": "MCP",
+        "constraint": "Security vulnerabilities (prompt injection, tool permissions, lookalike tools)",
+        "impact": "Critical",
+        "risk": "Data exfiltration, unauthorized actions, compromised system integrity",
+        "mitigation": [
+          "Implement server allowlist (block unapproved servers)",
+          "TLS certificate fingerprint verification",
+          "Tool composition analysis (detect exfiltration patterns)",
+          "Response sanitization (prevent prompt injection via tool outputs)",
+          "Layer OPA/Cedar policies over all MCP calls",
+          "Audit all tool invocations",
+          "Regular security reviews and pen-testing"
+        ],
+        "trade_off": "Powerful integration capabilities with security overhead"
+      },
+      {
+        "protocol": "MCP",
+        "constraint": "Relatively new standard (Nov 2024), evolving ecosystem",
+        "impact": "Medium",
+        "risk": "Spec changes, tool compatibility issues, immature tooling",
+        "mitigation": [
+          "Monitor MCP spec updates (Anthropic announcements)",
+          "Build custom MCP servers for critical tools (control quality)",
+          "Test integrations thoroughly before production",
+          "Contribute to MCP ecosystem (open source servers)"
+        ],
+        "trade_off": "Early adoption risk for future-proof standard with growing ecosystem (1000+ servers)"
+      }
+    ],
+    "self_improvement": [
+      {
+        "framework": "ACE",
+        "constraint": "Risk of context drift or error propagation",
+        "impact": "Medium",
+        "risk": "Self-improvement loop could degrade quality if not carefully validated",
+        "mitigation": [
+          "A/B testing required for all context updates",
+          "Performance improvement threshold (e.g., +5%) to adopt new version",
+          "Version control all contexts in Neo4j",
+          "Rollback capability if quality drops",
+          "Human review of significant context changes",
+          "Monitor quality metrics continuously"
+        ],
+        "trade_off": "Automation risk for continuous improvement without human fine-tuning"
+      }
+    ],
+    "llm_api": [
+      {
+        "provider": "Anthropic",
+        "constraint": "Rate limits and quotas",
+        "impact": "High",
+        "risk": "Request throttling during high load, hitting quota caps",
+        "mitigation": [
+          "Implement request queuing with exponential backoff",
+          "Monitor quota usage in real-time",
+          "Negotiate higher rate limits with Anthropic",
+          "Use Haiku for simple tasks to conserve quota",
+          "Cache responses aggressively"
+        ],
+        "trade_off": "Shared infrastructure limits for cost-effective API access"
+      },
+      {
+        "provider": "Anthropic",
+        "constraint": "API costs scale with usage",
+        "impact": "Critical",
+        "risk": "Runaway costs if not carefully managed",
+        "mitigation": [
+          "Budget alerts at daily/weekly/monthly levels",
+          "OPA policies to throttle when budget exceeded",
+          "Model selection optimization (Haiku vs Sonnet vs Opus)",
+          "Context length minimization",
+          "Prompt caching (50% cost reduction)",
+          "Response caching for deterministic queries"
+        ],
+        "trade_off": "Pay-per-use flexibility for potential cost volatility"
+      }
+    ]
+  },
+  "operational_constraints": {
+    "deployment": [
+      {
+        "platform": "Kubernetes",
+        "constraint": "Operational complexity (requires DevOps expertise)",
+        "impact": "Medium",
+        "risk": "Configuration errors, security misconfigurations, operational overhead",
+        "mitigation": [
+          "Use managed Kubernetes (EKS, GKE, AKS) to reduce operational burden",
+          "Infrastructure as Code (Terraform, Pulumi) for reproducibility",
+          "CI/CD pipelines for automated deployments",
+          "Monitoring and alerting (Prometheus, Grafana)",
+          "Disaster recovery runbooks",
+          "Team training on Kubernetes best practices"
+        ],
+        "trade_off": "Complexity for scalability, portability, and ecosystem"
+      },
+      {
+        "constraint": "Multi-service coordination (orchestration + memory + policy + tools)",
+        "impact": "Medium",
+        "risk": "Cascading failures, debugging difficulty, service dependencies",
+        "mitigation": [
+          "Circuit breakers for service failures",
+          "Graceful degradation (e.g., if Neo4j down, use cached contexts)",
+          "Distributed tracing (Jaeger, Zipkin)",
+          "Health checks and readiness probes",
+          "Service mesh (Istio, Linkerd) for traffic management",
+          "Comprehensive integration testing"
+        ],
+        "trade_off": "Microservices benefits (scalability, modularity) for operational complexity"
+      }
+    ],
+    "data_management": [
+      {
+        "constraint": "Data growth over time (graph + vectors + logs)",
+        "impact": "High",
+        "risk": "Storage costs increase, query performance degrades",
+        "mitigation": [
+          "Data retention policies (archive after N months)",
+          "Compress old data before archiving",
+          "Partition large graphs (e.g., by time period)",
+          "Index optimization and query tuning",
+          "Monitor storage usage with alerts",
+          "Budget for storage scaling"
+        ],
+        "trade_off": "Rich historical context for storage and cost management overhead"
+      },
+      {
+        "constraint": "Backup and disaster recovery",
+        "impact": "Critical",
+        "risk": "Data loss in case of failure",
+        "mitigation": [
+          "Neo4j AuraDB automated daily backups (30-day retention)",
+          "Kubernetes ETCD backups (Velero)",
+          "Test restore procedures quarterly",
+          "Multi-AZ deployment for high availability",
+          "Define RTO (4 hours) and RPO (24 hours)",
+          "Incident runbooks for common failure scenarios"
+        ],
+        "trade_off": "Data durability for backup/recovery complexity and cost"
+      }
+    ],
+    "monitoring_and_observability": [
+      {
+        "constraint": "Observability across multiple systems (K8s, Neo4j, LLM API, tools)",
+        "impact": "High",
+        "risk": "Blind spots, slow incident response, difficult root cause analysis",
+        "mitigation": [
+          "Unified observability platform (Prometheus + Grafana + Loki)",
+          "Distributed tracing (OpenTelemetry)",
+          "Structured logging (JSON format)",
+          "Custom dashboards for each layer (orchestration, memory, policy, etc.)",
+          "Alerting rules for critical metrics",
+          "On-call rotation with runbooks"
+        ],
+        "trade_off": "Operational visibility for instrumentation effort and tool costs"
+      }
+    ],
+    "security": [
+      {
+        "constraint": "Multi-layer security (network, application, data)",
+        "impact": "Critical",
+        "risk": "Security breaches, data leaks, compliance violations",
+        "mitigation": [
+          "Defense in depth strategy",
+          "Network segmentation (VPC, private subnets)",
+          "TLS everywhere (mTLS for service-to-service)",
+          "Secret management (HashiCorp Vault, K8s Secrets + encryption)",
+          "Input sanitization (prompt injection defense)",
+          "Regular security audits and penetration testing",
+          "Compliance frameworks (SOC 2, ISO 27001)",
+          "Incident response plan"
+        ],
+        "trade_off": "Security rigor for implementation complexity and potential UX friction"
+      }
+    ]
+  },
+  "resource_constraints": {
+    "team_skills": {
+      "constraint": "Specialized skills required (Neo4j, Kubernetes, LLM engineering, policy languages)",
+      "impact": "High",
+      "risk": "Team not prepared, longer ramp-up, suboptimal implementation",
+      "mitigation": [
+        "Training budget (online courses, workshops, certifications)",
+        "Hire specialists (Neo4j expert, DevOps engineer, AI engineer)",
+        "Engage consultants for initial setup",
+        "Pair programming and knowledge sharing",
+        "Comprehensive documentation",
+        "Phased rollout to allow learning time"
+      ],
+      "trade_off": "Advanced capabilities for upskilling investment"
+    },
+    "timeline": {
+      "constraint": "Ambitious scope for multi-phase project",
+      "impact": "Medium",
+      "risk": "Delays, scope creep, quality compromises",
+      "mitigation": [
+        "Phased approach (MVP → Core Platform → Enterprise Rollout)",
+        "Clear success criteria for each phase",
+        "Regular sprint planning and retrospectives",
+        "Prioritize ruthlessly (must-have vs nice-to-have)",
+        "Use managed services to accelerate (AuraDB vs self-hosted Neo4j)",
+        "Pre-built MCP servers vs custom integrations where possible",
+        "Stakeholder communication on realistic timelines"
+      ],
+      "trade_off": "Feature richness for delivery speed and quality assurance"
+    },
+    "budget": {
+      "constraint": "Cost across multiple dimensions (labor, infrastructure, LLM API)",
+      "impact": "Critical",
+      "risk": "Budget overruns, project cancellation",
+      "mitigation": [
+        "Detailed cost estimation per phase",
+        "Budget tracking dashboard (actual vs planned)",
+        "Monthly financial reviews",
+        "Cost optimization strategies (model selection, caching, spot instances)",
+        "Contingency buffer (10-20%)",
+        "Stakeholder approval for major cost changes"
+      ],
+      "trade_off": "Comprehensive solution for budget discipline"
+    }
+  },
+  "architectural_trade_offs": {
+    "hybrid_orchestration": {
+      "decision": "Use Claude SDK + ROMA + LangGraph (three frameworks)",
+      "benefit": "Best-of-breed for each use case (autonomy, recursion, workflows)",
+      "cost": "Integration complexity, multiple dependencies, debugging across frameworks",
+      "rationale": "Benefits outweigh costs due to specialized strengths and clear separation of concerns",
+      "alternative_considered": "Single framework (e.g., LangChain only)",
+      "why_rejected": "No single framework excels at autonomy + recursion + deterministic workflows"
+    },
+    "neo4j_graph_vs_vector_only": {
+      "decision": "Neo4j GraphRAG (graph + vectors in one database)",
+      "benefit": "Relationship reasoning, temporal queries, unified storage, Cypher expressiveness",
+      "cost": "Learning curve (Cypher), potential cost vs pure vector DB, specialized expertise needed",
+      "rationale": "Executive decision-making requires understanding relationships, not just similarity",
+      "alternative_considered": "Milvus (pure vector) + Postgres (structured data)",
+      "why_rejected": "Loses graph reasoning power, requires complex joins, no native temporal support"
+    },
+    "managed_vs_self_hosted": {
+      "decision": "Managed services (Neo4j AuraDB, managed K8s) over self-hosted",
+      "benefit": "Faster time to market, reduced operational burden, automatic updates/backups",
+      "cost": "Higher monthly costs, less control, potential vendor lock-in",
+      "rationale": "Team productivity and reliability more valuable than infrastructure cost savings",
+      "alternative_considered": "Self-hosted Neo4j + bare K8s on VMs",
+      "why_rejected": "Requires dedicated DevOps team, slower iteration, higher operational risk"
+    },
+    "dual_policy_engines": {
+      "decision": "OPA (infrastructure) + Cedar (business logic) instead of single engine",
+      "benefit": "OPA for CNCF ecosystem, Cedar for readability and safety-by-default",
+      "cost": "Two policy languages to learn, integration complexity, potential policy conflicts",
+      "rationale": "Clear separation of concerns: infrastructure vs business rules",
+      "alternative_considered": "OPA only",
+      "why_rejected": "Rego too complex for business users to write/audit approval policies"
+    },
+    "ace_self_improvement": {
+      "decision": "Enable ACE self-improvement from Phase 2 onwards",
+      "benefit": "Continuous quality improvement without manual prompt engineering",
+      "cost": "Risk of context drift, requires A/B testing infrastructure, monitoring overhead",
+      "rationale": "Long-term competitive advantage of self-improving system worth the risk with proper safeguards",
+      "alternative_considered": "Manual prompt engineering only",
+      "why_rejected": "Doesn't scale, misses opportunity for autonomous improvement, static system"
+    },
+    "mcp_security_vs_openness": {
+      "decision": "Strict MCP server allowlist + certificate verification",
+      "benefit": "Security, control, auditability",
+      "cost": "Slower integration of new tools, operational overhead of vetting servers, potential UX friction",
+      "rationale": "Security and compliance non-negotiable for enterprise executive brain",
+      "alternative_considered": "Open ecosystem (allow any MCP server)",
+      "why_rejected": "Unacceptable security risk (prompt injection, data exfiltration)"
+    }
+  },
+  "risk_register": {
+    "critical_risks": [
+      {
+        "risk_id": "R001",
+        "risk": "LLM hallucination leads to incorrect decision with financial/legal impact",
+        "probability": "Medium",
+        "impact": "Critical",
+        "mitigation": [
+          "Ragas faithfulness checks (threshold 0.8)",
+          "Human approval for high-risk decisions (risk_score > 0.8)",
+          "Immutable audit trail for accountability",
+          "User feedback mechanism to report errors",
+          "Quality monitoring dashboard with alerts"
+        ],
+        "residual_risk": "Low (with mitigations)"
+      },
+      {
+        "risk_id": "R002",
+        "risk": "Data breach or unauthorized access to sensitive information",
+        "probability": "Low",
+        "impact": "Critical",
+        "mitigation": [
+          "Multi-layer security (network, application, data)",
+          "Encryption at rest and in transit",
+          "MCP server allowlist and certificate verification",
+          "Regular security audits and pen-testing",
+          "Incident response plan",
+          "Compliance with GDPR, SOC 2, etc."
+        ],
+        "residual_risk": "Low (with mitigations)"
+      },
+      {
+        "risk_id": "R003",
+        "risk": "Budget overrun due to unexpected LLM API costs",
+        "probability": "Medium",
+        "impact": "High",
+        "mitigation": [
+          "Daily/weekly/monthly budget alerts",
+          "OPA policies to throttle when budget exceeded",
+          "Model selection optimization (Haiku for simple tasks)",
+          "Aggressive caching",
+          "Prompt caching (50% cost reduction)",
+          "Contingency budget buffer"
+        ],
+        "residual_risk": "Medium"
+      }
+    ],
+    "high_risks": [
+      {
+        "risk_id": "R004",
+        "risk": "ROMA beta instability causes production outages",
+        "probability": "Medium",
+        "impact": "High",
+        "mitigation": [
+          "Use Claude SDK as primary, ROMA for specific complex tasks only",
+          "Pin ROMA version, test upgrades in staging",
+          "Fallback to Claude SDK if ROMA fails",
+          "Monitoring and alerting for ROMA errors",
+          "Contribute to ROMA open source to influence roadmap"
+        ],
+        "residual_risk": "Medium"
+      },
+      {
+        "risk_id": "R005",
+        "risk": "Neo4j query performance degrades as data grows",
+        "probability": "Medium",
+        "impact": "High",
+        "mitigation": [
+          "Query optimization (indexes, query planning)",
+          "Data archival (move old data to cheaper storage)",
+          "Caching frequent queries in Redis",
+          "Monitor query performance continuously",
+          "Neo4j performance tuning consultation"
+        ],
+        "residual_risk": "Low"
+      },
+      {
+        "risk_id": "R006",
+        "risk": "User adoption failure (users don't trust or use the system)",
+        "probability": "Medium",
+        "impact": "Critical",
+        "mitigation": [
+          "Pilot with friendly department",
+          "Transparent explainability (show reasoning)",
+          "Human-in-loop emphasis (AI assists, not replaces)",
+          "User training and onboarding",
+          "Collect and act on user feedback",
+          "Demonstrate clear value (time saved, better decisions)"
+        ],
+        "residual_risk": "Medium"
+      }
+    ],
+    "medium_risks": [
+      {
+        "risk_id": "R007",
+        "risk": "ACE self-improvement loop degrades quality (context drift)",
+        "probability": "Low",
+        "impact": "Medium",
+        "mitigation": [
+          "A/B testing required for context updates",
+          "Performance improvement threshold (+5%) to adopt",
+          "Version control all contexts",
+          "Rollback capability",
+          "Human review of significant changes",
+          "Continuous quality monitoring"
+        ],
+        "residual_risk": "Low"
+      },
+      {
+        "risk_id": "R008",
+        "risk": "Team lacks skills in Neo4j/Cypher, slowing development",
+        "probability": "High",
+        "impact": "Medium",
+        "mitigation": [
+          "Training budget and program",
+          "Hire Neo4j expert",
+          "Engage consultant for initial setup",
+          "Build query library with common patterns",
+          "Comprehensive documentation"
+        ],
+        "residual_risk": "Low"
+      },
+      {
+        "risk_id": "R009",
+        "risk": "MCP ecosystem evolves, breaking existing integrations",
+        "probability": "Medium",
+        "impact": "Medium",
+        "mitigation": [
+          "Monitor MCP spec updates",
+          "Build custom MCP servers for critical tools",
+          "Version pinning and testing before upgrades",
+          "Abstraction layer for easier migration"
+        ],
+        "residual_risk": "Low"
+      }
+    ]
+  },
+  "compliance_constraints": {
+    "gdpr": {
+      "applicable": "If processing EU user data",
+      "requirements": [
+        "Right to be forgotten (data deletion on request)",
+        "Data minimization (collect only necessary data)",
+        "Purpose limitation (use data only for stated purpose)",
+        "Consent management",
+        "Data portability"
+      ],
+      "implementation": [
+        "Tag PII nodes in Neo4j with :PII label",
+        "Cypher scripts for data deletion (cascade to relationships)",
+        "Consent tracking in user profiles",
+        "Data export API (JSON format)",
+        "Privacy policy and user agreements"
+      ]
+    },
+    "sox": {
+      "applicable": "If processing financial data for public companies",
+      "requirements": [
+        "Audit trails for financial transactions",
+        "Separation of duties",
+        "Change management controls",
+        "Data integrity validation"
+      ],
+      "implementation": [
+        "Immutable decision log in Neo4j",
+        "Multi-layer approval for financial actions",
+        "Version control for policies and code",
+        "Checksums and validation for financial data"
+      ]
+    },
+    "hipaa": {
+      "applicable": "If processing health information",
+      "requirements": [
+        "Encryption at rest and in transit",
+        "Access controls (role-based)",
+        "Audit logging of PHI access",
+        "Business Associate Agreements (BAAs)"
+      ],
+      "implementation": [
+        "AES-256 encryption for Neo4j",
+        "TLS 1.3 for all connections",
+        "OPA/Cedar for RBAC",
+        "Decision log tracks all PHI access",
+        "BAAs with Anthropic, Neo4j, cloud providers"
+      ]
+    },
+    "soc2": {
+      "applicable": "For enterprise customers requiring compliance",
+      "requirements": [
+        "Security controls (trust service criteria)",
+        "Annual audit by qualified assessor",
+        "Continuous monitoring and evidence collection"
+      ],
+      "implementation": [
+        "Security policies and procedures",
+        "Incident response plan",
+        "Vulnerability management program",
+        "Compliance monitoring dashboard",
+        "Third-party audit engagement"
+      ]
+    }
+  },
+  "performance_constraints": {
+    "latency": {
+      "constraint": "LLM API calls add latency (1-10s per call)",
+      "impact": "High",
+      "mitigation": [
+        "Parallel LLM calls where possible",
+        "Streaming responses (show partial results)",
+        "Caching for deterministic queries",
+        "Use faster models (Haiku) for simple tasks",
+        "Optimize context length (fewer tokens = faster)"
+      ],
+      "target": "p95 latency < 30s for complex queries"
+    },
+    "throughput": {
+      "constraint": "Neo4j query throughput limited by instance size",
+      "impact": "Medium",
+      "mitigation": [
+        "Query optimization (indexes, query planning)",
+        "Read replicas for scaling reads",
+        "Caching frequent queries",
+        "Async processing for non-urgent queries",
+        "Upgrade Neo4j instance if needed"
+      ],
+      "target": "Support configurable requests/day based on user answers"
+    },
+    "concurrency": {
+      "constraint": "K8s pod limits, database connection pools",
+      "impact": "Medium",
+      "mitigation": [
+        "Horizontal pod autoscaling",
+        "Connection pooling best practices",
+        "Queue-based load leveling (RabbitMQ)",
+        "Rate limiting to prevent overload",
+        "Load testing to determine limits"
+      ],
+      "target": "Support configurable concurrent users"
+    }
+  },
+  "integration_constraints": {
+    "enterprise_systems": {
+      "constraint": "Legacy systems may lack APIs or have poor documentation",
+      "impact": "High",
+      "risk": "Integration delays, custom development required, data quality issues",
+      "mitigation": [
+        "API discovery and documentation phase",
+        "Build custom MCP servers if needed",
+        "Data normalization layer",
+        "Fallback to manual processes for stubborn systems",
+        "Prioritize integrations (start with API-friendly systems)"
+      ]
+    },
+    "authentication": {
+      "constraint": "Multiple auth methods (OAuth, API keys, SAML, DB credentials)",
+      "impact": "Medium",
+      "risk": "Credential management complexity, security risks",
+      "mitigation": [
+        "Centralized secret management (HashiCorp Vault)",
+        "Standardize on OAuth where possible",
+        "Credential rotation automation",
+        "Audit credential usage",
+        "Least privilege principle"
+      ]
+    }
+  },
+  "mitigation_summary": {
+    "description": "Summary of key mitigation strategies across all constraint categories",
+    "strategies": [
+      {
+        "strategy": "Phased Rollout",
+        "addresses": ["timeline_constraints", "team_skills", "user_adoption"],
+        "approach": "MVP → Core Platform → Enterprise Rollout allows learning and course correction"
+      },
+      {
+        "strategy": "Managed Services",
+        "addresses": ["operational_complexity", "timeline_pressure", "team_skills"],
+        "approach": "Use AuraDB, managed K8s to reduce burden, accept higher cost"
+      },
+      {
+        "strategy": "Defense in Depth",
+        "addresses": ["security_risks", "compliance", "MCP_security"],
+        "approach": "Multi-layer security (network, application, data, policy)"
+      },
+      {
+        "strategy": "Observability First",
+        "addresses": ["debugging_complexity", "performance_issues", "quality_assurance"],
+        "approach": "Comprehensive monitoring, tracing, logging, and alerting from day one"
+      },
+      {
+        "strategy": "Cost Controls",
+        "addresses": ["budget_overrun", "llm_api_costs", "infrastructure_costs"],
+        "approach": "Budget alerts, OPA throttling, model optimization, caching"
+      },
+      {
+        "strategy": "Quality Gates",
+        "addresses": ["hallucination_risk", "error_tolerance", "ace_context_drift"],
+        "approach": "Ragas evaluation, A/B testing, human review for high-risk"
+      },
+      {
+        "strategy": "Abstraction Layers",
+        "addresses": ["vendor_lock_in", "framework_instability", "mcp_evolution"],
+        "approach": "Build interfaces that allow swapping underlying implementations"
+      }
+    ]
+  },
+  "assumptions": {
+    "description": "Key assumptions underlying the architecture that should be validated with user",
+    "list": [
+      "Organization has budget for managed services (Neo4j AuraDB, managed K8s)",
+      "Team can invest in upskilling (Neo4j, Kubernetes, LLM engineering) or hire experts",
+      "User adoption is a priority and organization is willing to invest in change management",
+      "Security and compliance are critical (willing to accept governance overhead)",
+      "Cloud deployment is acceptable (or hybrid cloud + on-prem)",
+      "Multi-month timeline is acceptable (not expecting MVP in weeks)",
+      "Organization is comfortable with some experimental tech (ROMA beta, ACE, Graphiti)",
+      "Executive sponsorship exists to drive adoption and resolve blockers"
+    ],
+    "validation": "See questions_for_user.md to confirm these assumptions"
+  },
+  "next_steps": {
+    "immediate": [
+      "User reviews questions_for_user.md and provides answers",
+      "Architect refines architecture based on user constraints and preferences",
+      "Update constraints.json with user-specific constraints"
+    ],
+    "post_refinement": [
+      "Finalize architecture specification",
+      "Create detailed implementation plan (WBS, Gantt chart, sprint planning)",
+      "Assemble team and kick off Phase 1 (MVP)"
+    ]
+  }
+}

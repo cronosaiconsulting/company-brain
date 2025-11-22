@@ -1,0 +1,590 @@
+{
+  "project": {
+    "name": "Executive Brain",
+    "vision": "Autonomous Single-Point-of-Contact AI system acting as executive cognitive layer for organization",
+    "version": "1.0",
+    "date": "2025-11-08"
+  },
+  "functional_requirements": {
+    "input_processing": {
+      "priority": "critical",
+      "description": "Accept and normalize multimodal inputs",
+      "capabilities": [
+        {
+          "capability": "email_processing",
+          "sources": ["IMAP", "Exchange", "Gmail API"],
+          "operations": ["read", "send", "search", "thread_tracking"]
+        },
+        {
+          "capability": "chat_processing",
+          "sources": ["Slack", "Teams", "Discord", "custom"],
+          "operations": ["read_messages", "post_messages", "react", "thread_tracking"]
+        },
+        {
+          "capability": "voice_processing",
+          "sources": ["telephony", "voice_memos", "meeting_transcripts"],
+          "operations": ["speech_to_text", "intent_extraction", "speaker_identification"]
+        },
+        {
+          "capability": "api_processing",
+          "sources": ["REST", "GraphQL", "webhooks"],
+          "operations": ["request_validation", "authentication", "rate_limiting"]
+        },
+        {
+          "capability": "document_processing",
+          "sources": ["PDF", "Word", "Excel", "plain_text", "markdown"],
+          "operations": ["text_extraction", "structure_parsing", "metadata_extraction"]
+        }
+      ],
+      "output_format": {
+        "schema": "normalized_event",
+        "fields": ["event_id", "timestamp", "source", "user", "content", "context"],
+        "validation": "JSON_Schema"
+      }
+    },
+    "understanding": {
+      "priority": "critical",
+      "description": "Understand context and intent from inputs",
+      "capabilities": [
+        {
+          "capability": "intent_classification",
+          "methods": ["LLM_analysis", "pattern_matching"],
+          "output": "intent_label",
+          "examples": ["query", "command", "approval_request", "notification"]
+        },
+        {
+          "capability": "entity_extraction",
+          "methods": ["NER", "LLM_extraction"],
+          "entity_types": ["person", "organization", "project", "date", "amount", "location"],
+          "linking": "knowledge_graph"
+        },
+        {
+          "capability": "context_retrieval",
+          "sources": ["conversation_history", "knowledge_graph", "vector_search"],
+          "ranking": "hybrid_relevance_score"
+        },
+        {
+          "capability": "urgency_assessment",
+          "levels": ["low", "medium", "high", "critical"],
+          "factors": ["keywords", "sender_role", "time_sensitivity", "deadline_proximity"]
+        }
+      ]
+    },
+    "knowledge_retrieval": {
+      "priority": "critical",
+      "description": "Retrieve relevant information from structured and unstructured sources",
+      "capabilities": [
+        {
+          "capability": "graph_query",
+          "database": "Neo4j",
+          "query_language": "Cypher",
+          "operations": ["pattern_matching", "path_finding", "relationship_traversal"],
+          "optimization": "query_plan_caching"
+        },
+        {
+          "capability": "vector_search",
+          "method": "embedding_similarity",
+          "index_type": "HNSW",
+          "similarity_function": "cosine",
+          "top_k": 10
+        },
+        {
+          "capability": "temporal_query",
+          "supports": ["point_in_time", "time_range", "temporal_relationships"],
+          "framework": "Graphiti"
+        },
+        {
+          "capability": "hybrid_retrieval",
+          "pipeline": [
+            "vector_search_initial",
+            "graph_expansion",
+            "temporal_boosting",
+            "importance_filtering",
+            "relevance_reranking"
+          ],
+          "fusion_strategy": "weighted_sum"
+        }
+      ]
+    },
+    "reasoning_and_decision": {
+      "priority": "critical",
+      "description": "Reason over context and decide or recommend optimal actions",
+      "capabilities": [
+        {
+          "capability": "hierarchical_decomposition",
+          "framework": "ROMA",
+          "max_depth": 5,
+          "components": ["atomizer", "planner", "executors", "aggregator"],
+          "parallelization": true
+        },
+        {
+          "capability": "workflow_execution",
+          "framework": "LangGraph",
+          "graph_type": "DAG",
+          "supports": ["conditional_branching", "loops", "human_in_loop"],
+          "visualization": "Mermaid_diagrams"
+        },
+        {
+          "capability": "autonomous_iteration",
+          "framework": "Claude_Agent_SDK",
+          "tools": ["bash", "file_operations", "web_search", "MCP_tools"],
+          "checkpoints": true,
+          "max_iterations": 50
+        },
+        {
+          "capability": "risk_assessment",
+          "inputs": ["action_type", "resource_sensitivity", "user_context", "financial_impact", "anomaly_score"],
+          "output": "risk_score_0_to_1",
+          "thresholds": {
+            "low": 0.3,
+            "medium": 0.6,
+            "high": 0.8,
+            "critical": 1.0
+          }
+        }
+      ]
+    },
+    "action_execution": {
+      "priority": "critical",
+      "description": "Execute actions through connected tools and systems",
+      "capabilities": [
+        {
+          "capability": "tool_integration",
+          "protocol": "MCP",
+          "supported_tools": [
+            "email",
+            "calendar",
+            "crm",
+            "erp",
+            "database",
+            "document_store",
+            "project_management",
+            "communication_platforms",
+            "custom_apis"
+          ],
+          "authentication": ["oauth2", "api_key", "db_credentials", "saml"],
+          "rate_limiting": true
+        },
+        {
+          "capability": "governance_enforcement",
+          "layers": [
+            {
+              "layer": "infrastructure",
+              "engine": "OPA",
+              "policies": ["resource_authorization", "rate_limits", "cost_controls"]
+            },
+            {
+              "layer": "business_logic",
+              "engine": "Cedar",
+              "policies": ["approval_thresholds", "risk_gating", "compliance_rules"]
+            }
+          ],
+          "enforcement_point": "pre_execution"
+        },
+        {
+          "capability": "human_approval",
+          "trigger": "risk_score > 0.8",
+          "channels": ["email", "slack", "web_dashboard"],
+          "timeout": "24_hours",
+          "escalation": "manager_notification"
+        }
+      ]
+    },
+    "memory_and_learning": {
+      "priority": "critical",
+      "description": "Maintain long-term and episodic memory with self-improvement",
+      "capabilities": [
+        {
+          "capability": "knowledge_graph",
+          "database": "Neo4j",
+          "node_types": ["Person", "Project", "Document", "Policy", "Decision", "Event", "Memory"],
+          "relationship_types": ["WORKS_ON", "REPORTS_TO", "ABOUT", "REFERENCES", "RELATES_TO", "PRECEDED_BY"],
+          "temporal_support": true,
+          "versioning": true
+        },
+        {
+          "capability": "episodic_memory",
+          "framework": "Graphiti",
+          "update_mode": "real_time_incremental",
+          "consolidation": "importance_scoring",
+          "retention_policy": "archive_low_importance_after_90_days"
+        },
+        {
+          "capability": "procedural_memory",
+          "framework": "ACE",
+          "components": ["generator", "reflector", "curator"],
+          "storage": "Neo4j_ProceduralMemory_nodes",
+          "versioning": true,
+          "ab_testing": true
+        },
+        {
+          "capability": "working_memory",
+          "storage": "Redis",
+          "scope": "per_session",
+          "ttl": "session_duration",
+          "eviction": "discard_after_session"
+        }
+      ]
+    },
+    "evaluation_and_quality": {
+      "priority": "high",
+      "description": "Evaluate every action for faithfulness, correctness, and risk",
+      "capabilities": [
+        {
+          "capability": "automated_evaluation",
+          "framework": "Ragas",
+          "metrics": [
+            {
+              "metric": "faithfulness",
+              "threshold": 0.8,
+              "action_if_fail": "reject_response"
+            },
+            {
+              "metric": "answer_relevance",
+              "threshold": 0.7,
+              "action_if_fail": "retry"
+            },
+            {
+              "metric": "context_precision",
+              "threshold": 0.6,
+              "action_if_fail": "log_warning"
+            },
+            {
+              "metric": "context_recall",
+              "threshold": 0.6,
+              "action_if_fail": "augment_context"
+            }
+          ],
+          "trigger": "after_every_response"
+        },
+        {
+          "capability": "feedback_loop",
+          "source": ["ragas_scores", "user_feedback", "outcome_tracking"],
+          "destination": "ACE_reflector",
+          "frequency": "continuous"
+        }
+      ]
+    },
+    "audit_and_compliance": {
+      "priority": "critical",
+      "description": "Log decisions with evidence and policy compliance for full auditability",
+      "capabilities": [
+        {
+          "capability": "immutable_decision_log",
+          "storage": "Neo4j",
+          "schema": "Decision_node_with_relationships",
+          "retention": "7_years",
+          "fields": [
+            "decision_id",
+            "timestamp",
+            "agent_id",
+            "user_id",
+            "query",
+            "response",
+            "risk_score",
+            "retrieved_contexts",
+            "invoked_tools",
+            "governing_policies",
+            "evaluation_scores",
+            "approval_chain"
+          ]
+        },
+        {
+          "capability": "evidence_tracing",
+          "method": "graph_query",
+          "supports": ["why_this_decision", "what_evidence", "which_policies", "who_approved"],
+          "response_format": "human_readable_narrative"
+        },
+        {
+          "capability": "compliance_reporting",
+          "frameworks": ["GDPR", "SOX", "HIPAA", "SOC2"],
+          "reports": ["data_access_log", "deletion_requests", "policy_violations", "approval_audit"],
+          "export_formats": ["PDF", "CSV", "JSON"]
+        }
+      ]
+    }
+  },
+  "non_functional_requirements": {
+    "explainability": {
+      "priority": "critical",
+      "requirement": "Every output must trace back to evidence and reasoning path",
+      "implementation": [
+        "Cypher_query_traces",
+        "ROMA_stage_tracing",
+        "LangGraph_DAG_visualization",
+        "Decision_node_relationships"
+      ],
+      "user_facing": "Natural_language_explanation_generation",
+      "detail_levels": ["minimal", "medium", "detailed"]
+    },
+    "safety": {
+      "priority": "critical",
+      "requirement": "Risk-based gating with human approval for high-risk actions",
+      "implementation": [
+        {
+          "component": "risk_scoring",
+          "algorithm": "multi_factor_weighted_sum",
+          "inputs": ["action_type", "resource_sensitivity", "temporal_anomaly", "financial_impact", "user_baseline"]
+        },
+        {
+          "component": "policy_enforcement",
+          "layers": ["OPA_infrastructure", "Cedar_business_logic"],
+          "enforcement_mode": "deny_by_default"
+        },
+        {
+          "component": "human_in_loop",
+          "trigger_threshold": 0.8,
+          "timeout": "24_hours",
+          "fallback": "deny_if_no_response"
+        }
+      ],
+      "security": [
+        "input_sanitization",
+        "prompt_injection_defense",
+        "tool_response_sanitization",
+        "mcp_server_allowlist",
+        "tls_encryption",
+        "secret_management"
+      ]
+    },
+    "scalability": {
+      "priority": "high",
+      "requirement": "Sub-agent parallelization and queue-based orchestration",
+      "implementation": [
+        {
+          "component": "horizontal_scaling",
+          "method": "Kubernetes_HPA",
+          "metrics": ["CPU", "memory", "request_queue_depth"],
+          "min_replicas": 3,
+          "max_replicas": 50
+        },
+        {
+          "component": "vertical_scaling",
+          "services": ["Neo4j_AuraDB"],
+          "method": "managed_service_instance_upgrade"
+        },
+        {
+          "component": "caching",
+          "layers": [
+            {
+              "layer": "embedding_cache",
+              "storage": "Redis",
+              "ttl": "1_hour"
+            },
+            {
+              "layer": "context_cache",
+              "storage": "Redis",
+              "ttl": "15_minutes"
+            },
+            {
+              "layer": "llm_response_cache",
+              "storage": "Redis",
+              "ttl": "24_hours",
+              "scope": "deterministic_queries_only"
+            }
+          ]
+        },
+        {
+          "component": "parallelization",
+          "frameworks": ["ROMA_parallel_subtasks", "Claude_SDK_subagents"],
+          "coordination": "task_dependency_graph"
+        }
+      ],
+      "targets": {
+        "requests_per_day": "configurable",
+        "concurrent_users": "configurable",
+        "p95_latency": "< 30s for complex queries",
+        "availability": "99.9%"
+      }
+    },
+    "auditability": {
+      "priority": "critical",
+      "requirement": "Immutable decision log with reproducible reasoning chain",
+      "implementation": [
+        "Neo4j_immutable_Decision_nodes",
+        "relationship_tracing_to_evidence",
+        "versioned_policy_references",
+        "evaluation_score_logging"
+      ],
+      "query_capabilities": [
+        "retrieve_full_decision_chain",
+        "reproduce_reasoning_path",
+        "identify_policy_violations",
+        "generate_compliance_reports"
+      ],
+      "retention": "7_years"
+    },
+    "self_improvement": {
+      "priority": "high",
+      "requirement": "Context evolves via ACE (Generator → Reflector → Curator)",
+      "implementation": {
+        "generator": "Claude_Agent_SDK",
+        "reflector": {
+          "trigger": ["every_N_tasks", "quality_drop", "scheduled", "manual"],
+          "analysis": ["success_patterns", "failure_patterns", "suggested_improvements"]
+        },
+        "curator": {
+          "method": "ab_testing",
+          "validation": "performance_improvement_required",
+          "versioning": "Neo4j_ProceduralMemory_evolution"
+        }
+      },
+      "targets": {
+        "quality_improvement": "+10% over 6 months",
+        "context_evolution_frequency": "weekly_or_triggered"
+      }
+    },
+    "interoperability": {
+      "priority": "high",
+      "requirement": "Framework-agnostic with open protocols",
+      "implementation": [
+        {
+          "protocol": "MCP",
+          "purpose": "tool_integration",
+          "openness": "open_standard",
+          "ecosystem_size": "1000+_servers"
+        },
+        {
+          "api": "REST",
+          "purpose": "programmatic_access",
+          "authentication": "oauth2_or_api_key",
+          "documentation": "OpenAPI_spec"
+        },
+        {
+          "api": "GraphQL",
+          "purpose": "flexible_queries",
+          "schema": "auto_generated_from_Neo4j"
+        }
+      ],
+      "data_formats": ["JSON", "CSV", "Markdown", "Cypher"],
+      "export_capabilities": ["decision_logs", "knowledge_graph_subgraphs", "evaluation_reports"]
+    },
+    "cost_efficiency": {
+      "priority": "medium",
+      "requirement": "Adaptive context summarization, retrieval first, caching",
+      "implementation": [
+        {
+          "strategy": "model_selection",
+          "logic": "use_haiku_for_simple_tasks",
+          "fallback": "escalate_to_sonnet_if_needed"
+        },
+        {
+          "strategy": "context_optimization",
+          "methods": ["summarization", "chunk_filtering", "relevance_pruning"],
+          "target": "minimize_token_count_while_maintaining_quality"
+        },
+        {
+          "strategy": "caching",
+          "scope": ["embeddings", "graph_queries", "llm_responses"],
+          "hit_rate_target": "> 30%"
+        },
+        {
+          "strategy": "budget_controls",
+          "enforcement": "OPA_policies",
+          "alerts": ["daily_budget_threshold", "monthly_budget_projection"],
+          "throttling": "downshift_to_haiku_if_budget_exceeded"
+        }
+      ],
+      "targets": {
+        "cost_per_request": "< $0.10",
+        "llm_api_cost": "configurable_monthly_budget"
+      }
+    },
+    "performance": {
+      "priority": "high",
+      "latency_targets": {
+        "simple_query": "< 2s",
+        "complex_reasoning": "< 30s",
+        "workflow_execution": "< 5s"
+      },
+      "throughput_targets": {
+        "requests_per_second": "configurable",
+        "concurrent_workflows": "configurable"
+      },
+      "availability": "99.9%",
+      "disaster_recovery": {
+        "rto": "4_hours",
+        "rpo": "24_hours",
+        "backup_frequency": "daily"
+      }
+    }
+  },
+  "constraints": {
+    "see": "constraints.json"
+  },
+  "success_metrics": {
+    "quality": [
+      {
+        "metric": "faithfulness_score",
+        "target": "> 0.9",
+        "measurement": "Ragas_continuous"
+      },
+      {
+        "metric": "answer_relevance",
+        "target": "> 0.85",
+        "measurement": "Ragas_continuous"
+      }
+    ],
+    "performance": [
+      {
+        "metric": "p95_latency",
+        "target": "< 30s",
+        "measurement": "Prometheus_histogram"
+      },
+      {
+        "metric": "availability",
+        "target": "99.9%",
+        "measurement": "uptime_monitoring"
+      }
+    ],
+    "adoption": [
+      {
+        "metric": "user_adoption_rate",
+        "target": "configurable",
+        "measurement": "active_users / total_users"
+      },
+      {
+        "metric": "request_volume",
+        "target": "configurable",
+        "measurement": "requests_per_day"
+      }
+    ],
+    "safety": [
+      {
+        "metric": "policy_violation_rate",
+        "target": "< 1%",
+        "measurement": "violations / total_requests"
+      },
+      {
+        "metric": "human_approval_rate",
+        "target": "configurable (e.g., 10-20%)",
+        "measurement": "approvals_required / total_actions"
+      }
+    ],
+    "cost": [
+      {
+        "metric": "cost_per_request",
+        "target": "< $0.10",
+        "measurement": "(llm_cost + infrastructure_cost) / requests"
+      },
+      {
+        "metric": "monthly_budget_adherence",
+        "target": "< 110% of budget",
+        "measurement": "actual_spend / budgeted_spend"
+      }
+    ],
+    "improvement": [
+      {
+        "metric": "ace_quality_gain",
+        "target": "+10% over 6 months",
+        "measurement": "context_v_new vs context_v_old quality scores"
+      }
+    ]
+  },
+  "open_questions": {
+    "see": "questions_for_user.md"
+  },
+  "references": {
+    "see": "frameworks_comparison.md"
+  }
+}
